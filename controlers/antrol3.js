@@ -1,23 +1,8 @@
 require("dotenv").config();
-// const cron = require('node-cron');
-const { Op, json, where } = require("sequelize"); 
-const { bridging_sep, bridging_surat_kontrol_bpjs, referensi_mobilejkn_bpjs_taskid, referensi_mobilejkn_bpjs, pasien, reg_periksa, pemeriksaan_ralan, maping_poli_bpjs, maping_dokter_dpjpvclaim, jadwal, resep_obat, resep_dokter_racikan } = require("../models"); 
-const { convmils, milsPlus, getRandomTimeInMillis, getRandomInt, setStingTodate, days, stringToEpoch } = require("../helpers");
-const { sttPeriksa } = require("../helpers/kalibarsi");
+const { Op } = require("sequelize");
+const { referensi_mobilejkn_bpjs, reg_periksa, pemeriksaan_ralan } = require("../models");
+const { getRandomTimeInMillis, stringToEpoch } = require("../helpers");
 const Bpjs = require('../helpers/bpjs');
-// const REDIS_DB = process.env.REDIS_DB || 0;
-// const client = createClient({
-//     password: process.env.REDIS_PASSWORD,
-//     socket: {
-//         host: process.env.REDIS_URL,
-//         port: process.env.REDIS_URL_PORT,
-//     },
-//     database: REDIS_DB, // letakkan di sini, bukan dalam socket
-// });
-// client.connect();
-
-// client.on('error', (err) => console.log('Redis Client Error', err));
-// client.on('connect', () => console.log('Redis Client Connected'));
 
 const getHeaders = (data) => ({
     'X-cons-id': process.env['BPJS.X_cons_id'],
@@ -59,9 +44,6 @@ async function dashboard(date) {
     console.log(bpjsRes);
     if (bpjsRes.metadata.code !== 200) return bpjsRes;
     console.log(JSON.stringify(bpjsRes.response, null, 2));
-    // const key = data.X_cons_id + data.secretKey + data.timestamp;
-    // let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
-    // bpjsRes.response = JSON.parse(bpjs.decompress(hasil));
     return bpjsRes;
 }
 // dashboard('2026-08-12');
@@ -120,9 +102,6 @@ async function kirimBatal(kodebooking, keterangan) {
     });
     const bpjsRes = await response.json();
     if (bpjsRes.metadata.code !== 200) return bpjsRes;
-    // const key = data.X_cons_id + data.secretKey + data.timestamp;
-    // let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
-    // bpjsRes.response = JSON.parse(bpjs.decompress(hasil));
     return bpjsRes;
     
 }
@@ -309,24 +288,7 @@ async function selesaikanManual(date) {
                         console.log(updateResult);
                     }
                 } 
-                if (cekSoap.length > 0) {
-                    // console.log('cekSoap.length > 0');
-                    // const baseTimeSoap0 = new Date(`${date} ${cekSoap[0].jam_rawat}`).getTime();
-                    // const tasks = [
-                    //     { taskid: 1, waktu: baseTimeSoap0 - getRandomTimeInMillis(4, 5) },
-                    //     { taskid: 2, waktu: (baseTimeSoap0 - getRandomTimeInMillis(2, 3)) },
-                    //     { taskid: 3, waktu: baseTimeSoap0 },
-                    //     { taskid: 4, waktu: baseTimeSoap0 + getRandomTimeInMillis(1, 3) },
-                    //     { taskid: 5, waktu: baseTimeSoap0 + getRandomTimeInMillis(3, 6) },
-                    // ];
-                    // for (const task of tasks) {
-                    //     console.log(task + ' ' + x.kodebooking);
-                    //     const updateResult = await updatewaktu({ kodebooking: x.kodebooking, ...task });
-                    //     console.log(updateResult);
-                    // }
-                }else {
-                    console.log('cekSoap.length <= 2');
-                }
+                console.log('cekSoap.length <= 2');
                 
             }
             if (statusTaksid.metadata.code == 200){

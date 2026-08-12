@@ -1,4 +1,59 @@
 {
-  "project": "antrol",
-  "created_at": "2026-12-08T22:24:40+07:00"
+  "entities": [
+    {
+      "name": "Node.js",
+      "entityType": "Technology",
+      "observations": ["Runtime environment for JavaScript"]
+    },
+    {
+      "name": "Express-like Controller",
+      "entityType": "Component",
+      "observations": ["Handles HTTP-like requests, orchestrates BPJS API calls"]
+    },
+    {
+      "name": "Sequelize ORM",
+      "entityType": "Technology",
+      "observations": ["Object-Relational Mapping for MariaDB"]
+    },
+    {
+      "name": "MariaDB",
+      "entityType": "Database",
+      "observations": ["Relational database used for storing medical data"]
+    },
+    {
+      "name": "BPJS API Integration",
+      "entityType": "Component",
+      "observations": ["Interacts with Indonesian health insurance API"]
+    },
+    {
+      "name": "dotenv",
+      "entityType": "Library",
+      "observations": ["Loads environment variables from .env"]
+    },
+    {
+      "name": "axios",
+      "entityType": "Library",
+      "observations": ["HTTP client for API requests"]
+    },
+    {
+      "name": "lz-string",
+      "entityType": "Library",
+      "observations": ["Compression/decompression for BPJS responses"]
+    },
+    {
+      "name": "helpers",
+      "entityType": "Folder",
+      "observations": ["Utility functions for time conversion, random delays"]
+    },
+    {
+      "name": "models",
+      "entityType": "Folder",
+      "observations": ["Sequelize model definitions for domain entities"]
+    },
+    {
+      "name": "config",
+      "entityType": "Folder",
+      "observations": ["Database configuration files"]
+    }
+  ]
 }

@@ -1,9 +1,10 @@
 require("dotenv").config();
-const { Op } = require("sequelize");
 const { referensi_mobilejkn_bpjs, reg_periksa, pemeriksaan_ralan } = require("../models");
+const debug = process.env.DEBUG === 'true';
 const { getRandomTimeInMillis, stringToEpoch } = require("../helpers");
 const Bpjs = require('../helpers/bpjs');
 
+// Helper to build headers for BPJS requests
 const getHeaders = (data) => ({
     'X-cons-id': process.env['BPJS.X_cons_id'],
     'X-timestamp': data.timestamp,
@@ -11,114 +12,64 @@ const getHeaders = (data) => ({
     'user_key': process.env['BPJS.user_key'],
     'Content-Type': 'application/json'
 });
-async function getAntrian(date) {
+
+/**
+ * Centralised request helper for BPJS API.
+ * @param {string} endpoint - API endpoint path (e.g. '/antreanrs/...')
+ * @param {object} options - fetch options (method, body, etc.)
+ * @param {boolean} decrypt - whether to decrypt and decompress the response
+ * @returns {Promise<object>} - parsed BPJS response
+ */
+async function bpjsRequest(endpoint, options = {}, decrypt = true) {
     const bpjs = new Bpjs();
     const data = bpjs.getSignature();
     const headers = getHeaders(data);
-    const url = `${process.env['BPJS.URL']}/antreanrs/antrean/pendaftaran/tanggal/${date}`;
-    console.log(url);
-    const response = await fetch(url, {
-        method: 'GET',
-        headers: headers
-    });
+    const url = `${process.env['BPJS.URL']}${endpoint}`;
+    const response = await fetch(url, { ...options, headers });
     const bpjsRes = await response.json();
     if (bpjsRes.metadata.code !== 200) return bpjsRes;
+    if (!decrypt) return bpjsRes;
     const key = data.X_cons_id + data.secretKey + data.timestamp;
-    let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
-    bpjsRes.response = JSON.parse(bpjs.decompress(hasil));
-    console.log(bpjsRes.response.length);
+    const decrypted = bpjs.stringDecrypt(key, bpjsRes.response);
+    bpjsRes.response = JSON.parse(bpjs.decompress(decrypted));
     return bpjsRes;
 }
-// getAntrian('2026-08-12');
+async function getAntrian(date) {
+    const endpoint = `/antreanrs/antrean/pendaftaran/tanggal/${date}`;
+    const bpjsRes = await bpjsRequest(endpoint, { method: 'GET' });
+    return bpjsRes;
+}
 async function dashboard(date) {
-    const bpjs = new Bpjs();
-    const data = bpjs.getSignature();
-    const headers = getHeaders(data);
-    const url = `${process.env['BPJS.URL']}/antreanrs/dashboard/waktutunggu/tanggal/${date}/waktu/rs`;
-    console.log(url);
-    const response = await fetch(url, {
-        method: 'GET',
-        headers: headers
-    });
-    const bpjsRes = await response.json();
-    console.log(bpjsRes);
-    if (bpjsRes.metadata.code !== 200) return bpjsRes;
-    console.log(JSON.stringify(bpjsRes.response, null, 2));
+    const endpoint = `/antreanrs/dashboard/waktutunggu/tanggal/${date}/waktu/rs`;
+    const bpjsRes = await bpjsRequest(endpoint, { method: 'GET' });
     return bpjsRes;
 }
-// dashboard('2026-08-12');
 
 async function getBelum() {
-    const bpjs = new Bpjs();
-    const data = bpjs.getSignature();
-    const headers = getHeaders(data);
-    const url = `${process.env['BPJS.URL']}/antreanrs/antrean/pendaftaran/aktif`;
-    const response = await fetch(url, {
-        method: 'GET',
-        headers: headers
-    });
-    const bpjsRes = await response.json();
-    if (bpjsRes.metadata.code !== 200) return bpjsRes;
-    const key = data.X_cons_id + data.secretKey + data.timestamp;
-    let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
-    bpjsRes.response = JSON.parse(bpjs.decompress(hasil));
-    return bpjsRes;
+    const endpoint = '/antreanrs/antrean/pendaftaran/aktif';
+    return await bpjsRequest(endpoint, { method: 'GET' });
 }
 
 async function getlisttask(kodebooking) {
-    const bpjs = new Bpjs();
-    const data = bpjs.getSignature();
-    const headers = getHeaders(data);
-    const url = `${process.env['BPJS.URL']}/antreanrs/antrean/getlisttask`;
-    console.log(url);
-    const response = await fetch(url, {
+    const endpoint = '/antreanrs/antrean/getlisttask';
+    return await bpjsRequest(endpoint, {
         method: 'POST',
-        headers: headers,
-        body: JSON.stringify({
-            "kodebooking": kodebooking
-        })
+        body: JSON.stringify({ kodebooking })
     });
-    const bpjsRes = await response.json();
-    if (bpjsRes.metadata.code !== 200) return bpjsRes;
-    const key = data.X_cons_id + data.secretKey + data.timestamp;
-    let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
-    bpjsRes.response = JSON.parse(bpjs.decompress(hasil));
-    return bpjsRes;
-    
 }
-// getlisttask('20260811000019');
 async function kirimBatal(kodebooking, keterangan) {
-    const bpjs = new Bpjs();
-    const data = bpjs.getSignature();
-    const headers = getHeaders(data);
-    const url = `${process.env['BPJS.URL']}/antreanrs/antrean/batal`;
-    const response = await fetch(url, {
+    const endpoint = '/antreanrs/antrean/batal';
+    return await bpjsRequest(endpoint, {
         method: 'POST',
-        headers: headers,
-        body: JSON.stringify({
-            "kodebooking": kodebooking,
-            "keterangan": keterangan
-        })
+        body: JSON.stringify({ kodebooking, keterangan })
     });
-    const bpjsRes = await response.json();
-    if (bpjsRes.metadata.code !== 200) return bpjsRes;
-    return bpjsRes;
-    
 }
 async function updatewaktu(pesan) {
-    const bpjs = new Bpjs();
-    const data = bpjs.getSignature();
-    const headers = getHeaders(data);
-    const url = `${process.env['BPJS.URL']}/antreanrs/antrean/updatewaktu`;
-    console.log(url);
-    const response = await fetch(url, {
+    const endpoint = '/antreanrs/antrean/updatewaktu';
+    return await bpjsRequest(endpoint, {
         method: 'POST',
-        headers: headers,
         body: JSON.stringify(pesan)
     });
-    const bpjsRes = await response.json();
-    if (bpjsRes.metadata.code !== 200) return bpjsRes;
-    return bpjsRes;
 }
 
 async function selesaikan(date) {
@@ -139,7 +90,7 @@ async function selesaikan(date) {
                     }
                 ]
             });
-            console.log(JSON.stringify(cekStatusReg, null, 2));
+            if (debug) console.log(JSON.stringify(cekStatusReg, null, 2));
             if (cekStatusReg.reg_periksa.status_lanjut != 'Ralan' || cekStatusReg.reg_periksa.stts == 'Batal') {
                 console.log("Batal Antrean");
                let result = await kirimBatal(x.kodebooking, 'Batal Periksa');
@@ -199,7 +150,7 @@ async function selesaikan(date) {
                 ],
                 attributes: ['no_rawat', 'jam_rawat', 'nip']
             })
-            console.log(JSON.stringify(cekSoap, null, 2));
+            if (debug) console.log(JSON.stringify(cekSoap, null, 2));
             if (cekSoap.length >= 2) {
                 console.log('cekSoap.length >= 2');
                 let statusTaksid = await getlisttask(x.kodebooking);
@@ -319,7 +270,7 @@ async function selesaikanManual(date) {
                     }
                 ]
             });
-            console.log(JSON.stringify(cekStatusReg, null, 2));
+            if (debug) console.log(JSON.stringify(cekStatusReg, null, 2));
             if (cekStatusReg.reg_periksa == null) {
                 console.log("Batal Antrean");
                 let result = await kirimBatal(x.kodebooking, 'Batal Periksa');
@@ -342,7 +293,7 @@ async function selesaikanManual(date) {
                 ],
                 attributes: ['no_rawat', 'jam_rawat', 'nip']
             })
-            console.log(JSON.stringify(cekSoap, null, 2));
+            if (debug) console.log(JSON.stringify(cekSoap, null, 2));
             if (statusTaksid.metadata.code == 200) {
                 console.log(statusTaksid.response);
                 
@@ -390,8 +341,20 @@ async function selesaikanManual(date) {
         }
     }
 }
-selesaikanManual('2026-08-12');
+// selesaikanManual('2026-08-12');
 
 
 
 // console.log('1786408986000' - getRandomTimeInMillis(2, 5));
+
+// Export controller functions for external use (e.g., routes, tests)
+module.exports = {
+    getAntrian,
+    dashboard,
+    getBelum,
+    getlisttask,
+    kirimBatal,
+    updatewaktu,
+    selesaikan,
+    selesaikanManual
+};

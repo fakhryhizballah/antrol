@@ -1,3 +1,8 @@
+/**
+ * File: controlers/antrol.js
+ * Penjelasan: File ini berisi fungsi-fungsi kontroler utama untuk aplikasi.
+ * Semua komentar di dalam file ini ditulis dalam Bahasa Indonesia.
+ */
 require("dotenv").config();
 const debug = process.env.DEBUG === 'true';
 const { getRandomTimeInMillis, stringToEpoch } = require("../helpers");

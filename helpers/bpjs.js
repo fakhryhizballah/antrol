@@ -1,3 +1,8 @@
+/**
+ * File: helpers/bpjs.js
+ * Penjelasan: Modul helper untuk berinteraksi dengan API BPJS.
+ * Semua komentar di dalam file ini ditulis dalam Bahasa Indonesia.
+ */
 const crypto = require('crypto');
 const LZString = require('lz-string');
 

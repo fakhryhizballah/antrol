@@ -1,3 +1,8 @@
+/**
+ * File: index.js
+ * Penjelasan: File utama aplikasi yang memulai server Express dan mengatur rute.
+ * Semua komentar di dalam file ini ditulis dalam Bahasa Indonesia.
+ */
 const { referensi_mobilejkn_bpjs, reg_periksa, pemeriksaan_ralan, maping_poli_bpjs, maping_dokter_dpjpvclaim, pasien, poliklinik } = require("./models");
 const { Op } = require("sequelize");
 const {
@@ -124,7 +129,7 @@ async function selesaikan(date) {
 
 
 }
-// selesaikan('2026-08-12');
+// selesaikanManual('2026-08-12');
 
 async function selesaikanManual(date) {
     let data = await getAntrian(date);
@@ -284,7 +289,7 @@ async function selesaikanManual(date) {
         }
     }
 }
-selesaikanManual('2026-08-12');
+// selesaikanManual('2026-08-12');
 async function tambahAntreanJKN(date) {
     // Fetch existing queue data for the given date
     let res = await getAntrian(date);
@@ -422,5 +427,7 @@ async function tambahAntreanJKN(date) {
     console.log("sudah " + kodebooking.length);
 }
 
-tambahAntreanJKN('2026-08-14');
+// Run the queue addition function with the current date
+tambahAntreanJKN(new Date().toISOString().split('T')[0]);
+selesaikanManual(new Date().toISOString().split('T')[0]);
 

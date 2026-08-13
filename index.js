@@ -18,7 +18,8 @@ const {
     getRujukanRS,
     getRencanaKontrol
 } = require('./controlers/antrol');
-const { convmils } = require('./helpers');
+const { convmils, getRandomTimeInMillis, stringToEpoch } = require('./helpers');
+const debug = process.env.DEBUG === 'true';
 
 async function selesaikan(date) {
     let data = await getBelum();
@@ -175,7 +176,7 @@ async function selesaikanManual(date) {
                     const baseTimeSoap1 = new Date(`${date} ${cekSoap[1].jam_rawat}`).getTime();
 
                     const tasks = [
-                        { taskid: 1, waktu: baseTimeSoap0 - getRandomTimeInMillis(4, 5) },
+                        { taskid: 1, waktu: (baseTimeSoap0 - getRandomTimeInMillis(4, 5)) },
                         { taskid: 2, waktu: (baseTimeSoap0 - getRandomTimeInMillis(2, 3)) },
                         { taskid: 3, waktu: baseTimeSoap0 },
                         { taskid: 4, waktu: baseTimeSoap1 },
@@ -197,7 +198,7 @@ async function selesaikanManual(date) {
                 let data = {
                     kodebooking: x.kodebooking,
                     taskid: lastTaksID.taskid + 1,
-                    waktu: nextTime,
+                    waktu: nextTime
                 };
                 let updateTaksid = await updatewaktu(data);
                 console.log(updateTaksid);
@@ -428,6 +429,6 @@ async function tambahAntreanJKN(date) {
 }
 
 // Run the queue addition function with the current date
-tambahAntreanJKN(new Date().toISOString().split('T')[0]);
+// tambahAntreanJKN(new Date().toISOString().split('T')[0]);
 selesaikanManual(new Date().toISOString().split('T')[0]);
 

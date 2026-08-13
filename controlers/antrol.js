@@ -24,30 +24,33 @@ const getHeaders = (data) => ({
  * @param {boolean} decrypt - whether to decrypt and decompress the response
  * @returns {Promise<object>} - parsed BPJS response
  */
-async function bpjsRequest(endpoint, options = {}, decrypt = true) {
+/**
+ * Generic BPJS request helper.
+ *
+ * @param {string} endpoint - API endpoint path.
+ * @param {object} options - fetch options (method, body, etc.)
+ * @param {boolean} decrypt - whether to decrypt and decompress the response
+ * @param {string} metaKey - key used to access the status code in the response
+ * @returns {Promise<object>} - parsed BPJS response
+ */
+async function bpjsRequest(endpoint, options = {}, decrypt = true, metaKey = 'metadata') {
     const bpjs = new Bpjs();
     const data = bpjs.getSignature();
     const headers = getHeaders(data);
     const url = `${process.env['BPJS.URL']}${endpoint}`;
     const response = await fetch(url, { ...options, headers });
     const bpjsRes = await response.json();
-    if (bpjsRes.metadata.code !== 200) return bpjsRes;
+    // Handle both 'metadata' and 'metaData' keys for compatibility
+    const code = bpjsRes[metaKey]?.code;
+    if (code !== 200 && code !== '200') return bpjsRes;
     if (!decrypt) return bpjsRes;
     const key = data.X_cons_id + data.secretKey + data.timestamp;
-    const decrypted = bpjs.stringDecrypt(key, bpjsRes.response);
-    bpjsRes.response = JSON.parse(bpjs.decompress(decrypted));
-    return bpjsRes;
-}
-async function bpjsRequestVclaim(endpoint, options = {}, decrypt = true) {
-    const bpjs = new Bpjs();
-    const data = bpjs.getSignature();
-    const headers = getHeaders(data);
-    const url = `${process.env['BPJS.URL']}${endpoint}`;
-    const response = await fetch(url, { ...options, headers });
-    const bpjsRes = await response.json();
-    if (bpjsRes.metaData.code !== '200') return bpjsRes;
-    if (!decrypt) return bpjsRes;
-    const key = data.X_cons_id + data.secretKey + data.timestamp;
+    // Guard against missing response field to avoid decryption errors
+    if (!bpjsRes.response) {
+        // Log warning for debugging purposes
+        console.warn('bpjsRequest: response field missing, skipping decryption');
+        return bpjsRes;
+    }
     const decrypted = bpjs.stringDecrypt(key, bpjsRes.response);
     bpjsRes.response = JSON.parse(bpjs.decompress(decrypted));
     return bpjsRes;
@@ -104,17 +107,17 @@ async function getjadwaldokter(kd_poli_bpjs, date) {
 
 async function getRujukanPCare(no_peserta) {
     const endpoint = `/vclaim-rest/Rujukan/Peserta/${no_peserta}`;
-    const bpjsRes = await bpjsRequestVclaim(endpoint, { method: 'GET' });
+    const bpjsRes = await bpjsRequest(endpoint, { method: 'GET' }, true, 'metaData');
     return bpjsRes;
 }
 async function getRujukanRS(no_peserta) {
     const endpoint = `/vclaim-rest/Rujukan/RS/Peserta/${no_peserta}`;
-    const bpjsRes = await bpjsRequestVclaim(endpoint, { method: 'GET' });
+    const bpjsRes = await bpjsRequest(endpoint, { method: 'GET' }, true, 'metaData');
     return bpjsRes;
 }
 async function getRencanaKontrol(Bulan, Tahun, no_peserta) {
     const endpoint = `/vclaim-rest/RencanaKontrol/ListRencanaKontrol/Bulan/${Bulan}/Tahun/${Tahun}/Nokartu/${no_peserta}/filter/2`;
-    const bpjsRes = await bpjsRequestVclaim(endpoint, { method: 'GET' });
+    const bpjsRes = await bpjsRequest(endpoint, { method: 'GET' }, true, 'metaData');
     return bpjsRes;
 }
 // getRencanaKontrol('08', '2026', '0003003587054');

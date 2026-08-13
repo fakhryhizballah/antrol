@@ -37,6 +37,11 @@ class Bpjs {
     }
 
     stringDecrypt(key, string) {
+        // Guard against undefined or empty input to avoid throwing
+        if (typeof string !== 'string' || string.length === 0) {
+            // Return empty string to allow caller to handle gracefully
+            return '';
+        }
         // Hash key menggunakan SHA256 (menghasilkan buffer 32 byte)
         const keyHash = crypto.createHash('sha256').update(key).digest();
 

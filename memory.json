@@ -55,5 +55,15 @@
       "entityType": "Folder",
       "observations": ["Database configuration files"]
     }
+    ,
+    {
+      "name": "Mandatory Workflow Rules",
+      "entityType": "RuleSet",
+      "observations": [
+        "1. ALWAYS Read Memory Bank / MCP Memory First: - Sebelum mengeksekusi perintah atau menjawab user, selalu panggil tool MCP `memory` / baca konteks memori untuk memahami status dan arsitektur proyek saat ini.",
+        "2. ALWAYS Inspect Filesystem: - Gunakan tool MCP `filesystem` / berkas lokal untuk memverifikasi struktur direktori dan isi berkas terkait sebelum melakukan modifikasi kode.",
+        "3. Update Memory on Progress: - Setelah menyelesaikan perubahan atau menambahkan fitur baru, perbarui data entitas/hubungan di MCP Memory agar riwayat proyek tetap sinkron."
+      ]
+    }
   ]
 }

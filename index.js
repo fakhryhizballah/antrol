@@ -444,9 +444,11 @@ async function tambahAntreanJKN(date) {
 (async () => {
     try {
         await tambahAntreanJKN(new Date().toISOString().split('T')[0]);
+        // await tambahAntreanJKN('2026-08-15');
         await selesaikanManual(new Date().toISOString().split('T')[0]);
     } catch (err) {
         console.error('Error during queue processing:', err);
     }
 })();
+cons
 

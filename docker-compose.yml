@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+  Antrol-JKN:
+    build: .
+    volumes:
+      # - .:/app
+      - ./.env:/app/.env
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped

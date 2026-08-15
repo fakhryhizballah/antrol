@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+  index-runner:
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      - NODE_ENV=production
+    command: ["/bin/bash", "-c", "./run-index.sh"]
+    restart: unless-stopped

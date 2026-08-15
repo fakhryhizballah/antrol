@@ -450,5 +450,5 @@ async function tambahAntreanJKN(date) {
         console.error('Error during queue processing:', err);
     }
 })();
-cons
+console.log("Done");
 

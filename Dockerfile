@@ -1,22 +1,20 @@
-# Dockerfile for running index.js every minute
-# Dockerfile for running index.js every minute
-# Use official Node LTS base image
-FROM node:18-alpine
+FROM node:latest
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files and install dependencies
-COPY package.json package-lock.json* ./
+# Copy source
+COPY . .
+
+# Install dependencies
 RUN npm install
 
-# Copy the rest of the application
-COPY . .
-COPY .env .env
-
 # Install cron
-RUN apk add --no-cache busybox-suid
-RUN echo "*/1 * * * * /usr/local/bin/node /app/index.js >> /var/log/cron.log 2>&1" | crontab -
+RUN apt-get update && apt-get install -y cron && rm -rf /var/lib/apt/lists/*
 
-# Ensure cron starts on container startup
-CMD ["crond", "-f", "-L", "/var/log/cron.log"]
+# Add cron job
+RUN echo "*/1 * * * * /usr/local/bin/node /app/index.js >> /var/log/cron.log 2>&1" > /etc/cron.d/myjob \
+    && chmod 0644 /etc/cron.d/myjob
+
+# Start cron in the foreground
+CMD ["cron", "-f"]

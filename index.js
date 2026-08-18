@@ -447,6 +447,7 @@ async function tambahAntreanJKN(date) {
 
         await selesaikanManual(new Date().toISOString().split('T')[0]);
         await tambahAntreanJKN(new Date(Date.now() + 86400000).toISOString().split('T')[0]);
+        console.log('Queue processing completed.' + new Date().toISOString().split('T')[0]);
     } catch (err) {
         console.error('Error during queue processing:', err);
     }

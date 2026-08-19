@@ -151,12 +151,17 @@ async function selesaikanManual(date) {
                 console.log(result);
                 continue;
             }
-            if (cekStatusReg.status_lanjut != 'Ralan' || cekStatusReg.stts == 'batal') {
+            if (cekStatusReg.stts == 'Batal') {
                 console.log('batal ' + x.kodebooking);
                 let result = await kirimBatal(x.kodebooking, 'Batal Periksa');
                 console.log(result);
                 continue;
 
+            }
+            if (cekStatusReg.status_lanjut != 'Ralan') {
+                let result = await kirimBatal(x.kodebooking, 'Batal Periksa');
+                console.log(result);
+                continue;
             }
             let statusTaksid = await getlisttask(x.kodebooking);
             console.log(statusTaksid);
@@ -215,6 +220,24 @@ async function selesaikanManual(date) {
 
                 } else {
                     console.log(x.ispeserta + ' ' + x.kodebooking);
+                    console.log(cekSoap.jam_rawat);
+                    let taksid4 = new Date(`${date} ${cekSoap.jam_rawat}`).getTime();
+                    let taksid3 = taksid4 - getRandomTimeInMillis(5, 20);
+                    let taksid2 = taksid3 - getRandomTimeInMillis(2, 5);
+                    let taksid1 = taksid2 - getRandomTimeInMillis(1, 6);
+                    console.log(taksid4);
+                    const tasks = [
+                        { taskid: 1, waktu: taksid1 },
+                        { taskid: 2, waktu: taksid2 },
+                        { taskid: 3, waktu: taksid3 },
+                        { taskid: 4, waktu: taksid4 },
+                        { taskid: 5, waktu: taksid4 + getRandomTimeInMillis(3, 5) },
+                    ];
+
+                    for (const task of tasks) {
+                        const updateResult = await updatewaktu({ kodebooking: x.kodebooking, ...task });
+                        console.log(updateResult);
+                    }
                 }
             }
             if (statusTaksid.metadata.code == 200) {
@@ -303,13 +326,13 @@ async function selesaikanManual(date) {
 
 
 // selesaikanManual('2026-08-12');
-async function tambahAntreanJKN(date) {
+async function tambahAntrean(date) {
     // Fetch existing queue data for the given date
     let res = await getAntrian(date);
     let kodebooking = [];
+    console.log(res);
     if (res.metadata.code == 200) {
-        let filter = res.response.filter((item) => item.ispeserta === true);
-        kodebooking = filter.map((item) => item.kodebooking);
+        kodebooking = res.response.map((item) => item.kodebooking);
     }
 
     // Retrieve registrations not yet in queue
@@ -317,7 +340,6 @@ async function tambahAntreanJKN(date) {
         where: {
             no_rawat: { [Op.notIn]: kodebooking },
             tgl_registrasi: date,
-            kd_pj: 'BPJ',
             status_lanjut: 'Ralan',
             kd_poli: { [Op.notIn]: ['IGDK', 'U0031', 'U0003', 'U0008', 'U0022', 'U0055', 'U0054', 'U0057', 'U0058', 'U0056'] },
         },
@@ -345,35 +367,43 @@ async function tambahAntreanJKN(date) {
         try {
             let jeniskunjungan
             let noRef
-            if (element.status_poli == 'Baru') {
-                jeniskunjungan = 1;
-                rujukan = await getRujukanPCare(element.pasien.no_peserta);
-                if (rujukan.response == null) {
-                    rujukan = await getRujukanRS(element.pasien.no_peserta);
-                    jeniskunjungan = 4
-                }
-                noRef = rujukan.response.rujukan.noKunjungan
+            let jenispasien = 'JKN';
+            if (element.kd_pj != 'BPJ') {
+                jenispasien = 'NON JKN';
+                noRef = '-';
+                jeniskunjungan = 3
             } else {
-                jeniskunjungan = 3;
-                let bulan = element.tgl_registrasi.substring(5, 7);
-                let tahun = element.tgl_registrasi.substring(0, 4);
-                let rencanaKontrol = await getRencanaKontrol(bulan, tahun, element.pasien.no_peserta);
-                if (rencanaKontrol.response == null) {
-                    jeniskunjungan = 2;
-                    noRef = `X/${element.no_rawat}`
-                } else {
-                    console.log(rencanaKontrol.response);
-                    let mapRencana = rencanaKontrol.response.list.filter(item => item.tglRencanaKontrol == element.tgl_registrasi);
-                    if (mapRencana.length == 0) {
-                        jeniskunjungan = 2;
-                        noRef = `Y/${element.no_rawat}`
-                    } else {
-                        noRef = mapRencana[0].noSuratKontrol
+                if (element.status_poli == 'Baru') {
+                    jeniskunjungan = 1;
+                    rujukan = await getRujukanPCare(element.pasien.no_peserta);
+                    if (rujukan.response == null) {
+                        rujukan = await getRujukanRS(element.pasien.no_peserta);
+                        jeniskunjungan = 4
                     }
+                    noRef = rujukan.response.rujukan.noKunjungan
+                } else {
+                    jeniskunjungan = 3;
+                    let bulan = element.tgl_registrasi.substring(5, 7);
+                    let tahun = element.tgl_registrasi.substring(0, 4);
+                    let rencanaKontrol = await getRencanaKontrol(bulan, tahun, element.pasien.no_peserta);
+                    if (rencanaKontrol.response == null) {
+                        jeniskunjungan = 2;
+                        noRef = `X/${element.no_rawat}`
+                    } else {
+                        console.log(rencanaKontrol.response);
+                        let mapRencana = rencanaKontrol.response.list.filter(item => item.tglRencanaKontrol == element.tgl_registrasi);
+                        if (mapRencana.length == 0) {
+                            jeniskunjungan = 2;
+                            noRef = `Y/${element.no_rawat}`
+                        } else {
+                            noRef = mapRencana[0].noSuratKontrol
+                        }
+                    }
+
+
                 }
-
-
             }
+
 
             let jadwalDr = await getjadwaldokter(element.maping_poli_bpjs.kd_poli_bpjs, date);
             if (jadwalDr.metadata.code == 201) {
@@ -384,7 +414,7 @@ async function tambahAntreanJKN(date) {
             let estimasidilayani = convmils(`${element.tgl_registrasi} ${element.jam_reg}`, 30);
             let data = {
                 kodebooking: element.no_rawat,
-                jenispasien: "JKN",
+                jenispasien: jenispasien,
                 nomorkartu: element.pasien.no_peserta,
                 nik: element.pasien.no_ktp,
                 nohp: element.pasien.no_tlp,
@@ -435,19 +465,25 @@ async function tambahAntreanJKN(date) {
         }
     }
     let mapsregBooking = regBooking.map((item) => item.no_rawat);
+    if (res.metadata.code == 200) {
+        let findJKN = res.response.filter((item) => item.ispeserta === true);
+        console.log("JKN " + findJKN.length);
+    }
     console.log(mapsregBooking);
     console.log("Belum " + mapsregBooking.length);
     console.log("sudah " + kodebooking.length);
+    return;
 }
 
 // Run the queue addition function with the current date
 (async () => {
     try {
-        await tambahAntreanJKN(new Date().toISOString().split('T')[0]);
-
+        await tambahAntrean(new Date().toISOString().split('T')[0]);
         await selesaikanManual(new Date().toISOString().split('T')[0]);
-        await tambahAntreanJKN(new Date(Date.now() + 86400000).toISOString().split('T')[0]);
+        // await selesaikanManual('2026-08-19');
+        await tambahAntrean(new Date(Date.now() + 86400000).toISOString().split('T')[0]);
         console.log('Queue processing completed.' + new Date().toISOString().split('T')[0]);
+        return;
     } catch (err) {
         console.error('Error during queue processing:', err);
     }

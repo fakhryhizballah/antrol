@@ -198,6 +198,10 @@ async function selesaikanManual(date) {
                             attributes: ['tanggal']
                         })
                         console.log(tracekrSEP)
+                        if (!tracekrSEP) {
+                            console.log('belum ada sep ' + x.kodebooking);
+                            continue;
+                        }
                         let taksid3 = new Date(tracekrSEP.tanggal).getTime();
                         console.log(taksid3);
                         let taksid4 = new Date(`${date} ${cekSoap.jam_rawat}`).getTime();

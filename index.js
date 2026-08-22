@@ -193,7 +193,7 @@ async function selesaikanManual(date) {
                             where: {
                                 // tanggal: { [Op.between]: new Date(`${date} 00:00:00`), [Op.lte]: new Date(`${date} 23:59:59`) },
                                 tanggal: { [Op.between]: [`${date} 00:00:00`, `${date} 23:59:59`] },
-                                sqle: { [Op.like]: `insert into bridging_sep values(|${findSEP.no_sep}|${x.kodebooking}%` }
+                                sqle: { [Op.substring]: `insert into bridging_sep values(|${findSEP.no_sep}|${x.kodebooking}` }
                             },
                             attributes: ['tanggal']
                         })
@@ -485,7 +485,7 @@ async function tambahAntrean(date) {
         await tambahAntrean(new Date().toISOString().split('T')[0]);
         await selesaikanManual(new Date().toISOString().split('T')[0]);
         // await selesaikanManual('2026-08-19');
-        await tambahAntrean(new Date(Date.now() + 86400000).toISOString().split('T')[0]);
+        // await tambahAntrean(new Date(Date.now() + 86400000).toISOString().split('T')[0]);
         console.log('Queue processing completed.' + new Date().toISOString().split('T')[0]);
         return;
     } catch (err) {

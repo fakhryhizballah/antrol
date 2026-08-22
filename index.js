@@ -134,7 +134,7 @@ async function selesaikanManual(date) {
     let data = await getAntrian(date);
     if (data.metadata.code !== 200) return data;
 
-    const pending = data.response.filter(item => item.status === 'Belum dilayani');
+    const pending = data.response.filter(item => item.status != 'Selesai dilayani' && item.status != 'Batal');
 
     for (const x of pending) {
         if (x.sumberdata == 'Bridging Antrean') {
@@ -343,7 +343,7 @@ async function tambahAntrean(date) {
     let regBooking = await reg_periksa.findAll({
         where: {
             no_rawat: { [Op.notIn]: kodebooking },
-            tgl_registrasi: date,
+            tgl_registrasi: { [Op.gte]: date },
             status_lanjut: 'Ralan',
             kd_poli: { [Op.notIn]: ['IGDK', 'U0031', 'U0003', 'U0008', 'U0022', 'U0055', 'U0054', 'U0057', 'U0058', 'U0056'] },
         },

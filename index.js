@@ -135,9 +135,6 @@ async function selesaikanManual(date) {
     if (data.metadata.code !== 200) return data;
 
     const pending = data.response.filter(item => item.status != 'Selesai dilayani' && item.status != 'Batal');
-    console.log(pending);
-    return;
-
     for (const x of pending) {
         if (x.sumberdata == 'Bridging Antrean') {
             let cekStatusReg = await reg_periksa.findOne({

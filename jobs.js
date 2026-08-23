@@ -7,6 +7,7 @@ const { stringToDatetime } = require('./helpers');
 
 async function simpanTaksId(date) {
     let dataAntrian = await getAntrian(date)
+    if (data.metadata.code !== 200) return data;
     let dataSelesai = dataAntrian.response.filter(item => item.status == 'Selesai dilayani' && item.sumberdata == 'Bridging Antrean');
     let kdBoking = dataSelesai.map(item => item.kodebooking);
     for (const item of kdBoking) {

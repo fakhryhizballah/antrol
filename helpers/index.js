@@ -45,6 +45,14 @@ function stringToEpoch(dateString) {
     return epochMilliseconds;
 
 }
+function stringToDatetime(dateString) {
+    let [day, month, year, time] = dateString.replace(' WIB', '').split(/[- ]/);
+    let isoString = `${year}-${month}-${day}T${time}+07:00`;
+
+    // Buat objek Date dan ambil epoch time dalam milliseconds
+    return new Date(isoString)
+
+}
 function epochToDatetime(epochSeconds, useUTC = false) {
     const date = new Date(epochSeconds * 1000);
 
@@ -106,5 +114,6 @@ module.exports = {
     setStingTodate,
     days,
     stringToEpoch,
-    epochToDatetime
+    epochToDatetime,
+    stringToDatetime
 }

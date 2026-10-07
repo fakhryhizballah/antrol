@@ -230,6 +230,17 @@ async function tambahAntrean(date) {
     if (res.metadata.code == 200) {
         kodebooking = res.response.map((item) => item.kodebooking);
     }
+    let refregJKN = await referensi_mobilejkn_bpjs.findAll({
+        where: {
+            tanggalperiksa: date
+        },
+        attributes: ['no_rawat', 'nobooking'],
+    })
+    if (refregJKN.length > 0) {
+        for (const item of refregJKN) {
+            kodebooking.push(item.dataValues.no_rawat);
+        }
+    }
 
     // Retrieve registrations not yet in queue
     let regBooking = await reg_periksa.findAll({
@@ -367,21 +378,21 @@ async function tambahAntrean(date) {
     }
     console.log(mapsregBooking);
     console.log("Belum " + mapsregBooking.length);
-    console.log("sudah " + kodebooking.length);
+    console.log("sudah " + regBooking.length);
     return;
 }
-
+tambahAntrean("2026-10-09");
 // Run the queue addition function with the current date
-(async () => {
-    try {
-        await tambahAntrean(new Date().toISOString().split('T')[0]);
-        await tambahAntrean(new Date(Date.now() + 86400000).toISOString().split('T')[0]);
-        await selesaikanManual(new Date().toISOString().split('T')[0]);
-        // await selesaikanManual('2026-08-19');
-        console.log('Queue processing completed.' + new Date().toISOString().split('T')[0]);
-        return;
-    } catch (err) {
-        console.error('Error during queue processing:', err);
-    }
-})();
+// (async () => {
+//     try {
+//         await tambahAntrean(new Date().toISOString().split('T')[0]);
+//         await tambahAntrean(new Date(Date.now() + 86400000).toISOString().split('T')[0]);
+//         await selesaikanManual(new Date().toISOString().split('T')[0]);
+//         // await selesaikanManual('2026-08-19');
+//         console.log('Queue processing completed.' + new Date().toISOString().split('T')[0]);
+//         return;
+//     } catch (err) {
+//         console.error('Error during queue processing:', err);
+//     }
+// })();
 

@@ -41,4 +41,4 @@ async function simpanTaksId(date) {
     return
 }
 simpanTaksId(new Date().toISOString().split('T')[0]);
-// simpanTaksId("2026-08-19");
+// simpanTaksId("2026-10-09");

@@ -56,7 +56,7 @@ async function selesaikanManual(date) {
                 continue;
             }
             let statusTaksid = await getlisttask(x.kodebooking);
-            console.log(statusTaksid);
+            // console.log(statusTaksid);
             let cekSoap = await pemeriksaan_ralan.findOne({
                 where: {
                     no_rawat: x.kodebooking
@@ -80,12 +80,11 @@ async function selesaikanManual(date) {
                     })
                     console.log(findSEP);
                     if (findSEP) {
-                        console.log(findSEP.no_sep);
                         let tracekrSEP = await trackersql.findOne({
                             where: {
                                 // tanggal: { [Op.between]: new Date(`${date} 00:00:00`), [Op.lte]: new Date(`${date} 23:59:59`) },
                                 tanggal: { [Op.between]: [`${date} 00:00:00`, `${date} 23:59:59`] },
-                                sqle: { [Op.substring]: `insert into bridging_sep values(|${findSEP.no_sep}|${x.kodebooking}` }
+                                sqle: { [Op.substring]: `|${findSEP.no_sep}` }
                             },
                             attributes: ['tanggal']
                         })
@@ -179,7 +178,6 @@ async function selesaikanManual(date) {
                 console.log(result);
                 continue;
             }
-            let statusTaksid = await getlisttask(x.kodebooking);
             let cekSoap = await pemeriksaan_ralan.findOne({
                 where: {
                     no_rawat: cekStatusReg.no_rawat
@@ -189,20 +187,132 @@ async function selesaikanManual(date) {
                 ],
                 attributes: ['no_rawat', 'jam_rawat', 'nip']
             })
-            let findTaksid = await getlisttask(cekStatusReg.no_rawat);
-            if (findTaksid.metadata.code == 200) {
-                for (let y of findTaksid.response) {
-                    let wakturs = stringToEpoch(y.wakturs);
-                    let data = {
-                        kodebooking: x.kodebooking,
-                        taskid: y.taskid,
-                        waktu: wakturs
-                    };
-                    let updateTaksid = await updatewaktu(data);
-                    console.log(updateTaksid);
+            let statusTaksid = await getlisttask(x.kodebooking);
+            if (statusTaksid.metadata.code == 204) {
+                if (x.ispeserta == true) {
+                    let findSEP = await bridging_sep.findOne({
+                        where: {
+                            no_rawat: cekStatusReg.no_rawat
+                        },
+                        attributes: ['no_sep']
+                    })
+                    console.log(findSEP);
+                    if (findSEP) {
+                        console.log(findSEP.no_sep);
+                        let tracekrSEP = await trackersql.findOne({
+                            where: {
+                                // tanggal: { [Op.between]: new Date(`${date} 00:00:00`), [Op.lte]: new Date(`${date} 23:59:59`) },
+                                tanggal: { [Op.between]: [`${date} 00:00:00`, `${date} 23:59:59`] },
+                                sqle: { [Op.substring]: `insert into bridging_sep values(|${findSEP.no_sep}|${cekStatusReg.no_rawat}` }
+                            },
+                            attributes: ['tanggal']
+                        })
+                        console.log(tracekrSEP)
+                        if (!tracekrSEP) {
+                            console.log('belum ada sep ' + cekStatusReg.no_rawat);
+                            continue;
+                        }
+                        let taksid3 = new Date(tracekrSEP.tanggal).getTime();
+                        console.log(taksid3);
+                        let taksid4 = new Date(`${date} ${cekSoap.jam_rawat}`).getTime();
+                        console.log(cekSoap.jam_rawat);
+                        console.log(taksid4);
+                        const tasks = [
+                            { taskid: 1, waktu: (taksid3 - getRandomTimeInMillis(5, 7)) },
+                            { taskid: 2, waktu: (taksid3 - getRandomTimeInMillis(2, 3)) },
+                            { taskid: 3, waktu: taksid3 },
+                            { taskid: 4, waktu: taksid4 },
+                            { taskid: 5, waktu: taksid4 + getRandomTimeInMillis(2, 5) },
+                        ];
+
+                        for (const task of tasks) {
+                            const updateResult = await updatewaktu({ kodebooking: x.kodebooking, ...task });
+                            console.log(updateResult);
+                        }
+                        // return;
+                    }
+
+                } else {
+                    // console.log(x.ispeserta + ' ' + x.kodebooking);
+                    // console.log(cekSoap.jam_rawat);
+                    let taksid4 = new Date(`${date} ${cekSoap.jam_rawat}`).getTime();
+                    let taksid3 = taksid4 - getRandomTimeInMillis(5, 20);
+                    let taksid2 = taksid3 - getRandomTimeInMillis(2, 5);
+                    let taksid1 = taksid2 - getRandomTimeInMillis(1, 6);
+                    // console.log(taksid4);
+                    const tasks = [
+                        { taskid: 1, waktu: taksid1 },
+                        { taskid: 2, waktu: taksid2 },
+                        { taskid: 3, waktu: taksid3 },
+                        { taskid: 4, waktu: taksid4 },
+                        { taskid: 5, waktu: taksid4 + getRandomTimeInMillis(3, 5) },
+                    ];
+
+                    for (const task of tasks) {
+                        const updateResult = await updatewaktu({ kodebooking: x.kodebooking, ...task });
+                        console.log(updateResult);
+                    }
                 }
             }
+            if (statusTaksid.metadata.code == 200) {
+                let lastTaksID = statusTaksid.response[statusTaksid.response.length - 1];
+                console.log(lastTaksID);
 
+                // let wakturs = stringToEpoch(lastTaksID.wakturs);
+                // let nextTime = wakturs + getRandomTimeInMillis(2, 5);
+                // let data = {
+                //     kodebooking: x.kodebooking,
+                //     taskid: lastTaksID.taskid + 1,
+                //     waktu: nextTime
+                // };
+                // let updateTaksid = await updatewaktu(data);
+                // console.log(data);
+                // console.log(updateTaksid);
+                // if (updateTaksid.metadata.code == 201) {
+                // // console.log(updateTaksid);
+                // }
+                let findSEP = await bridging_sep.findOne({
+                    where: {
+                        no_rawat: cekStatusReg.no_rawat
+                    },
+                    attributes: ['no_sep']
+                })
+                console.log(findSEP);
+                if (findSEP) {
+                    console.log(findSEP.no_sep);
+                    let tracekrSEP = await trackersql.findOne({
+                        where: {
+                            // tanggal: { [Op.between]: new Date(`${date} 00:00:00`), [Op.lte]: new Date(`${date} 23:59:59`) },
+                            tanggal: { [Op.between]: [`${date} 00:00:00`, `${date} 23:59:59`] },
+                            sqle: { [Op.substring]: `insert into bridging_sep values(|${findSEP.no_sep}|${cekStatusReg.no_rawat}` }
+                        },
+                        attributes: ['tanggal']
+                    })
+                    console.log(tracekrSEP)
+                    if (!tracekrSEP) {
+                        console.log('belum ada sep ' + cekStatusReg.no_rawat);
+                        continue;
+                    }
+                    let taksid3 = new Date(tracekrSEP.tanggal).getTime();
+                    console.log(taksid3);
+                    let taksid4 = new Date(`${date} ${cekSoap.jam_rawat}`).getTime();
+                    console.log(cekSoap.jam_rawat);
+                    console.log(taksid4);
+                    const tasks = [
+                        { taskid: 1, waktu: (taksid3 - getRandomTimeInMillis(5, 7)) },
+                        { taskid: 2, waktu: (taksid3 - getRandomTimeInMillis(2, 3)) },
+                        { taskid: 3, waktu: taksid3 },
+                        { taskid: 4, waktu: taksid4 },
+                        { taskid: 5, waktu: taksid4 + getRandomTimeInMillis(2, 5) },
+                    ];
+
+                    for (const task of tasks) {
+                        const updateResult = await updatewaktu({ kodebooking: x.kodebooking, ...task });
+                        console.log(updateResult);
+                    }
+                }
+
+            }
         }
     }
     const counts = pending.reduce(
@@ -283,11 +393,34 @@ async function tambahAntrean(date) {
                 if (element.status_poli == 'Baru') {
                     jeniskunjungan = 1;
                     rujukan = await getRujukanPCare(element.pasien.no_peserta);
+                    console.log(rujukan);
                     if (rujukan.response == null) {
                         rujukan = await getRujukanRS(element.pasien.no_peserta);
+                        console.log(rujukan, element.pasien.no_peserta);
                         jeniskunjungan = 4
+                        if (rujukan.metaData.code == '201') {
+                            let getSEPRanap = await bridging_sep.findOne({
+                                where: {
+                                    no_kartu: element.pasien.no_peserta,
+                                    jnspelayanan: '1',
+                                },
+                                attributes: ['no_sep'],
+                                order: [
+                                    ['tglsep', 'DESC']
+                                ]
+                            })
+                            console.log(getSEPRanap);
+                            if (getSEPRanap == null) {
+                                jeniskunjungan = 2;
+                                noRef = `X/${element.no_rawat}`
+                            } else {
+                                jeniskunjungan = 3;
+                                noRef = getSEPRanap.dataValues.no_sep
+                            }
+                        }
+                    } else {
+                        noRef = rujukan.response.rujukan.noKunjungan
                     }
-                    noRef = rujukan.response.rujukan.noKunjungan
                 } else {
                     jeniskunjungan = 3;
                     let bulan = element.tgl_registrasi.substring(5, 7);
@@ -381,18 +514,18 @@ async function tambahAntrean(date) {
     console.log("sudah " + regBooking.length);
     return;
 }
-tambahAntrean("2026-10-09");
+// selesaikanManual("2026-10-10");
 // Run the queue addition function with the current date
-// (async () => {
-//     try {
-//         await tambahAntrean(new Date().toISOString().split('T')[0]);
-//         await tambahAntrean(new Date(Date.now() + 86400000).toISOString().split('T')[0]);
-//         await selesaikanManual(new Date().toISOString().split('T')[0]);
-//         // await selesaikanManual('2026-08-19');
-//         console.log('Queue processing completed.' + new Date().toISOString().split('T')[0]);
-//         return;
-//     } catch (err) {
-//         console.error('Error during queue processing:', err);
-//     }
-// })();
+(async () => {
+    try {
+        await tambahAntrean(new Date().toISOString().split('T')[0]);
+        await tambahAntrean(new Date(Date.now() + 86400000).toISOString().split('T')[0]);
+        await selesaikanManual(new Date().toISOString().split('T')[0]);
+        // await selesaikanManual('2026-08-19');
+        console.log('Queue processing completed.' + new Date().toISOString().split('T')[0]);
+        return;
+    } catch (err) {
+        console.error('Error during queue processing:', err);
+    }
+})();
 

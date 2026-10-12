@@ -187,6 +187,9 @@ async function selesaikanManual(date) {
                 ],
                 attributes: ['no_rawat', 'jam_rawat', 'nip']
             })
+            if (cekSoap == null) {
+                continue;
+            }
             let statusTaksid = await getlisttask(x.kodebooking);
             if (statusTaksid.metadata.code == 204) {
                 if (x.ispeserta == true) {
@@ -203,7 +206,7 @@ async function selesaikanManual(date) {
                             where: {
                                 // tanggal: { [Op.between]: new Date(`${date} 00:00:00`), [Op.lte]: new Date(`${date} 23:59:59`) },
                                 tanggal: { [Op.between]: [`${date} 00:00:00`, `${date} 23:59:59`] },
-                                sqle: { [Op.substring]: `insert into bridging_sep values(|${findSEP.no_sep}|${cekStatusReg.no_rawat}` }
+                                sqle: { [Op.substring]: `|${findSEP.no_sep}|${cekStatusReg.no_rawat}` }
                             },
                             attributes: ['tanggal']
                         })
@@ -214,6 +217,7 @@ async function selesaikanManual(date) {
                         }
                         let taksid3 = new Date(tracekrSEP.tanggal).getTime();
                         console.log(taksid3);
+                        console.log(cekSoap);
                         let taksid4 = new Date(`${date} ${cekSoap.jam_rawat}`).getTime();
                         console.log(cekSoap.jam_rawat);
                         console.log(taksid4);
@@ -521,7 +525,7 @@ async function tambahAntrean(date) {
         await tambahAntrean(new Date().toISOString().split('T')[0]);
         await tambahAntrean(new Date(Date.now() + 86400000).toISOString().split('T')[0]);
         await selesaikanManual(new Date().toISOString().split('T')[0]);
-        // await selesaikanManual('2026-08-19');
+        // await tambahAntrean('2026-10-17');
         console.log('Queue processing completed.' + new Date().toISOString().split('T')[0]);
         return;
     } catch (err) {

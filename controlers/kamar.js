@@ -42,4 +42,20 @@ async function updateKamar(data) {
     
 }
 
-module.exports = { getReferensiKamar, ketersediaanKamarRS, updateKamar };
+async function sirsUpdate(data) {
+
+    const getHeaders = (data) => ({
+        'X-Timestamp': Math.floor(Date.now() / 1000).toString(),
+        'X-rs-id': process.env["X-rs-id"],
+        'X-Pass': process.env["X-Pass"],
+        'Content-Type': 'application/json'
+    });
+    const headers = getHeaders(data);
+    const response = await fetch("https://sirs.kemkes.go.id/fo/index.php/Fasyankes", { method: 'PUT', headers, body: JSON.stringify(data) });
+    const bpjsRes = await response.json();
+    console.log(bpjsRes)
+    return bpjsRes
+
+}
+
+module.exports = { getReferensiKamar, ketersediaanKamarRS, updateKamar, sirsUpdate };

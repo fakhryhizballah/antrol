@@ -1,0 +1,49 @@
+[
+    [
+        {
+            "kd_bangsal": "RB",
+            "kelas": "Kelas VIP",
+            "id_t_tt": "30389858"
+        },
+        {
+            "kd_bangsal": "RB",
+            "kelas": "Kelas 1",
+            "id_t_tt": "30389859"
+        },
+        {
+            "kd_bangsal": "RB",
+            "kelas": "Kelas 2",
+            "id_t_tt": "30389860"
+        },
+        {
+            "kd_bangsal": "RB",
+            "kelas": "Kelas 3",
+            "id_t_tt": "30389862"
+        },
+        {
+            "id_t_tt": "30389822",
+            "kd_bangsal": "ZA",
+            "kelas": "Kelas 1"
+        },
+        {
+            "id_t_tt": "30389823",
+            "kd_bangsal": "ZA",
+            "kelas": "Kelas 2"
+        },
+        {
+            "id_t_tt": "30389825",
+            "kd_bangsal": "ZA",
+            "kelas": "Kelas 3"
+        },
+        {
+            "id_t_tt": "30389873",
+            "kd_bangsal": "ZS",
+            "kelas": "Kelas 2"
+        },
+        {
+            "id_t_tt": "30389901",
+            "kd_bangsal": "ZS",
+            "kelas": "Kelas 3"
+        }
+    ]
+]

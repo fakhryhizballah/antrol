@@ -1,7 +1,7 @@
-require("dotenv").config();
 const { Op } = require("sequelize");
+const fs = require('fs').promises;
 const { kamar, kamar_inap, Sequelize } = require('./models');
-const { ketersediaanKamarRS, updateKamar } = require('./controlers/kamar');
+const { ketersediaanKamarRS, updateKamar, sirsUpdate } = require('./controlers/kamar');
 
 async function kalibrasiKamar() {
     try {
@@ -143,5 +143,56 @@ async function updateKamarBPJS() {
         console.error("Terjadi kesalahan saat update kamar BPJS:", error);
     }
 }
+async function updateSIRS() {
+    const rawData = await fs.readFile('sirs.json', 'utf8');
+    const mapping = JSON.parse(rawData)[0];
+
+    // 2. Satu query agregasi untuk semua kombinasi (mengeliminasi N+1 query)
+    const stats = await kamar.findAll({
+        attributes: [
+            'kd_bangsal',
+            'kelas',
+            [Sequelize.fn('COUNT', Sequelize.col('*')), 'jumlah'],
+            [
+                Sequelize.fn(
+                    'SUM',
+                    Sequelize.literal("CASE WHEN status = 'ISI' THEN 1 ELSE 0 END")
+                ),
+                'terpakai'
+            ]
+        ],
+        where: {
+            statusdata: '1'
+        },
+        group: ['kd_bangsal', 'kelas'],
+        raw: true
+    });
+
+    // 3. Indexing hasil query ke dalam Map untuk pencarian O(1)
+    const statsMap = new Map();
+    for (const row of stats) {
+        const key = `${row.kd_bangsal}::${row.kelas}`;
+        statsMap.set(key, {
+            jumlah: Number(row.jumlah) || 0,
+            terpakai: Number(row.terpakai) || 0
+        });
+    }
+
+    // 4. Susun payload dan kirim secara paralel dengan Promise.allSettled
+    const updatePromises = mapping.map(async (e) => {
+        const key = `${e.kd_bangsal}::${e.kelas}`;
+        const { jumlah = 0, terpakai = 0 } = statsMap.get(key) || {};
+
+        const data = {
+            id_t_tt: e.id_t_tt,
+            terpakai,
+            jumlah
+        };
+
+        console.log(e.id_t_tt, data);
+        return sirsUpdate(data);
+    });
+}
 kalibrasiKamar();
 updateKamarBPJS();
+updateSIRS()
